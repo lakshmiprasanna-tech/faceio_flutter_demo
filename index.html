@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FACEIO Flutter Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>FACEIO Flutter Integration</h1>
+  <button onclick="enrollNewUser()">Enroll New User</button>
+  <button onclick="authenticateUser()">Authenticate User</button>
+
+  <script src="https://cdn.faceio.net/fio.js"></script>
+  <script type="text/javascript">
+    const faceio = new faceIO("fioa6775"); // ← Replace with your Public ID
+
+    function sendMessageToFlutter(message) {
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('faceioMessage', message);
+      }
+    }
+
+    function enrollNewUser() {
+      faceio.enroll({
+        locale: "auto",
+        userConsent: false,
+        payload: {
+          whoami: 123456,
+          email: "john.doe@example.com"
+        }
+      }).then(userInfo => {
+        console.log("Enrolled:", userInfo);
+        sendMessageToFlutter({
+          status: "success",
+          type: "enroll",
+          data: userInfo
+        });
+      }).catch(errCode => {
+        console.error("Enroll failed:", errCode);
+        sendMessageToFlutter({
+          status: "error",
+          type: "enroll",
+          code: errCode
+        });
+      });
+    }
+
+    function authenticateUser() {
+      faceio.authenticate({
+        locale: "auto"
+      }).then(userData => {
+        console.log("Authenticated:", userData);
+        sendMessageToFlutter({
+          status: "success",
+          type: "auth",
+          data: userData
+        });
+      }).catch(errCode => {
+        console.error("Auth failed:", errCode);
+        sendMessageToFlutter({
+          status: "error",
+          type: "auth",
+          code: errCode
+        });
+      });
+    }
+  </script>
+</body>
+</html>
