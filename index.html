@@ -22,6 +22,7 @@
   <h1>FACEIO Flutter Integration</h1>
   <button onclick="enrollNewUser()">Enroll New User</button>
   <button onclick="authenticateUser()">Authenticate User</button>
+  <button onclick="deleteFace()">Delete My Face ID</button>
 
   <script src="https://cdn.faceio.net/fio.js"></script>
   <script type="text/javascript">
@@ -76,6 +77,47 @@
           code: errCode
         });
       });
+    }
+
+    async function deleteFace() {
+        try {
+            // Step 1: Authenticate using user face
+            const userData = await faceio.authenticate();
+            const facialId = userData.facialId;
+
+            console.log("Authenticated user for deletion:", facialId);
+
+            // Step 2: Delete enrollment
+            await faceio.deleteUser(facialId);
+            alert("Successfully deleted your Face ID.");
+
+            // Send success back to Flutter
+            if (window.flutter_inappwebview) {
+                window.flutter_inappwebview.callHandler('faceioMessage', {
+                    status: "success",
+                    type: "delete",
+                    facialId
+                });
+            }
+
+        } catch (err) {
+            console.error("Delete failed:", err.code, err.message);
+
+            if (err.code === 20) {
+                alert("User not enrolled.");
+            } else {
+                alert('Failed to delete Face ID. Code: ${err.code}');
+            }
+
+            // Send error back to Flutter
+            if (window.flutter_inappwebview) {
+                window.flutter_inappwebview.callHandler('faceioMessage', {
+                    status: "error",
+                    type: "delete",
+                    code: err.code
+                });
+            }
+        }
     }
   </script>
 </body>

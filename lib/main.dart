@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,14 +27,38 @@ class _FaceioPageState extends State<FaceioPage> {
   InAppWebViewController? webView;
 
   @override
+  void initState() {
+    super.initState();
+    _requestCameraPermission();
+  }
+
+  Future<void> _requestCameraPermission() async {
+    var status = await Permission.camera.status;
+    if (!status.isGranted) {
+      status = await Permission.camera.request();
+    }
+    if (!status.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Camera permission denied")),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("FACEIO Flutter")),
       body: InAppWebView(
         initialUrlRequest: URLRequest(
           url: WebUri(
-            "https://lakshmiprasanna-tech.github.io/faceio-flutter-demo/"
+            "https://lakshmiprasanna-tech.github.io/faceio_flutter_demo/",
           ),
+        ),
+        initialSettings: InAppWebViewSettings(
+          javaScriptEnabled: true,
+          mediaPlaybackRequiresUserGesture: false,
+          allowsInlineMediaPlayback: true,
+          // onPermissionRequest: true, // important!
         ),
         onWebViewCreated: (controller) {
           webView = controller;
@@ -45,9 +70,15 @@ class _FaceioPageState extends State<FaceioPage> {
               debugPrint("Received from FACEIO: $message");
 
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(message.toString()))
+                SnackBar(content: Text(message.toString())),
               );
             },
+          );
+        },
+        onPermissionRequest: (controller, request) async {
+          return PermissionResponse(
+            resources: request.resources,
+            action: PermissionResponseAction.GRANT,
           );
         },
       ),
