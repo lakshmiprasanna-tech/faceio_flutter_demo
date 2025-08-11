@@ -127,8 +127,8 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
 
   String get url =>
       widget.isEnroll
-          ? "https://lakshmiprasanna-tech/github.io/faceio_flutter_demo/enroll.html"
-          : "https://lakshmiprasanna-tech/github.io/faceio_flutter_demo/authenticate.html";
+          ? "https://lakshmiprasanna-tech.github.io/faceio_flutter_demo/enroll.html"
+          : "https://lakshmiprasanna-tech.github.io/faceio_flutter_demo/authenticate.html";
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +141,7 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
         children: [
           Expanded(
             child: InAppWebView(
-              initialUrlRequest: URLRequest(url: Uri.parse(url)),
+              initialUrlRequest: URLRequest(url: WebUri(url)),
               onWebViewCreated: (controller) {
                 _webViewController = controller;
                 // Add the handler after controller is ready
