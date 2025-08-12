@@ -159,6 +159,23 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
                   },
                 );
               },
+              onLoadStop: (controller, url) async {
+                // Inject user data into the WebView JS context
+                String jsInject = """
+                  window.flutterUserData = {
+                    userId: "${widget.userId}",
+                    nric: "${widget.nric}"
+                  };
+                """;
+                await controller.evaluateJavascript(source: jsInject);
+
+                // Call the appropriate FaceIO function
+                if (widget.isEnroll) {
+                  await controller.evaluateJavascript(source: "enrollNewUser();");
+                } else {
+                  await controller.evaluateJavascript(source: "authenticateUser();");
+                }
+              },
             ),
           ),
           Padding(
