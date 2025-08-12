@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
 
 void main() {
   runApp(FaceIODemoApp());
@@ -29,6 +31,7 @@ class _HomePageState extends State<HomePage> {
   // Static user info for now
   final String staticUserId = "user123";
   final String staticNric = "900101-01-1234";
+  final String faceioApiKey = "37b1ae3e2f64b229614e4ab2797416ba";
 
   @override
   void initState() {
@@ -41,8 +44,8 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _facialId = prefs.getString('facial_id');
       _status = _facialId == null
-          ? 'No facial ID found. Please enroll.'
-          : 'Facial ID found: $_facialId';
+          ? 'No facial ID found for user $staticUserId. Please enroll.'
+          : 'Facial ID found for user $staticUserId. Please Authenticate';
     });
   }
 
@@ -53,7 +56,24 @@ class _HomePageState extends State<HomePage> {
     }
     return status.isGranted;
   }
-
+  // delete facialId
+  Future<void> deleteFacialId(String fid, String key) async {
+    final String url =
+        "https://api.faceio.net/deletefacialid?fid=$fid&key=$key";
+ 
+    try {
+      final response = await http.get(Uri.parse(url));
+ 
+      if (response.statusCode == 200) {
+        print("Facial ID deleted successfully: ${response.body}");
+      } else {
+        print("Failed to delete Facial ID. Status: ${response.statusCode}");
+        print("Response: ${response.body}");
+      }
+    } catch (e) {
+      print("Error deleting Facial ID: $e");
+    }
+  }
   void _openFaceIOWebView({required bool isEnroll}) async {
     bool granted = await _requestCameraPermission();
     if (!granted) {
@@ -98,7 +118,15 @@ class _HomePageState extends State<HomePage> {
               ElevatedButton(
                 onPressed: () => _openFaceIOWebView(isEnroll: false),
                 child: Text('Authenticate'),
-              )
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  deleteFacialId(_facialId!, faceioApiKey);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: Text('Delete Facial ID'),
+              ),
           ],
         ),
       ),
@@ -142,6 +170,13 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
           Expanded(
             child: InAppWebView(
               initialUrlRequest: URLRequest(url: WebUri(url)),
+              initialSettings: InAppWebViewSettings(
+                javaScriptEnabled: true,
+                useOnDownloadStart: true,
+                clearCache: false,
+                userAgent: "MyCustomApp/1.0.0 (Flutter)",
+                mediaPlaybackRequiresUserGesture: false,
+              ),
               onWebViewCreated: (controller) {
                 _webViewController = controller;
                 // Add the handler after controller is ready
@@ -208,3 +243,7 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
     };
   }
 }
+
+
+
+
