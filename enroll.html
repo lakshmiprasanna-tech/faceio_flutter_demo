@@ -13,37 +13,40 @@
 	// Initialize the library first with your application Public ID.
 	// Grab your public ID from the Application Manager on the FACEIO console at: https://console.faceio.net/
 	const faceio = new faceIO("fioa6775"); // Replace with your application Public ID
-	function enrollNewUser() {
-		// Start the facial enrollment process
-		faceio.enroll({
-			"locale": "auto", // Default user locale
-			// "userConsent": false, // Set to true if you have already collected user consent
-			"payload": {
-				/* The payload we want to associate with this particular user
-				* which is forwarded back to us on each of his future authentication...
-				*/
-			userId: window.flutterUserData?.userId || "defaultUser",
-            nric: window.flutterUserData?.nric || "defaultNric"
-			}
-		}).then(userInfo => {
-			// User Successfully Enrolled!
-            window.flutter_inappwebview.callHandler('sendFacialId', userInfo.facialId);
-            window.flutter_inappwebview.callHandler('processComplete', 'Enrollment successful');
-			console.log(userInfo);
-			// handle success, save the facial ID, redirect to dashboard...
-			//
-			// faceio.restartSession() let you enroll another user again (without reloading the entire HTML page)
-		}).catch(errCode => {
-			// handle enrollment failure. Visit:
-			// https://faceio.net/integration-guide#error-codes
-			// for the list of all possible error codes
-			handleError(errCode);
-			window.flutter_inappwebview.callHandler('processComplete', errorCode);
-			// If you want to restart the session again without refreshing the current TAB. Just call:
-			faceio.restartSession();
-			// restartSession() let you enroll the same or another user again (in case of failure) without refreshing the entire page.
-		});
-	}
+	async function enrollNewUser() {
+        const userData = window.flutterUserData || {};
+
+        try {
+            const userInfo = await faceio.enroll({
+                locale: "auto",
+                payload: {
+                    userId: userData.userId || "defaultUser",
+                    nric: userData.nric || "defaultNric"
+                }
+            });
+
+            // Notify Flutter of success
+            window.flutter_inappwebview.callHandler("processComplete", {
+                success: true,
+                payload: {
+                    userId: userData.userId,
+                    nric: userData.nric,
+                    facialId: userInfo.facialId
+                }
+            });
+
+        } catch (errCode) {
+            handleError(errCode);
+
+            // Notify Flutter of failure
+            window.flutter_inappwebview.callHandler("processComplete", {
+                success: false,
+                payload: {}
+            });
+
+            faceio.restartSession();
+        }
+    }
 	function handleError(errCode) {
 		// Log all possible error codes during user interaction..
 		// Refer to: https://faceio.net/integration-guide#error-codes

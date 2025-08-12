@@ -14,51 +14,34 @@
 	// Grab your public ID from the Application Manager on the FACEIO console at: https://console.faceio.net/
 	const faceio = new faceIO("fioa6775"); // Replace with your application Public ID
 
-	function authenticateUser() {
-		// Start the facial authentication process (Identify a previously enrolled user)
-		faceio.authenticate({
-			"locale": "auto" // Default user locale
-		}).then(userData => {
-			console.log("Success, user recognized")
-            console.log("FACIAL_ID:" + userData.facialId);   // send facial ID to Flutter
-            console.log("AUTH_PAYLOAD:" + JSON.stringify(userData.payload)); // optional
-			// Grab the facial ID linked to this particular user which will be same
-			// for each of his successful future authentication. FACEIO recommend
-			// that your rely on this ID if you plan to uniquely identify
-			// all enrolled users on your backend for example.
-			
-			// Grab the arbitrary data you have already linked (if any) to this particular user
-			// during his enrollment via the payload parameter the enroll() method takes.
-			//console.log("Associated Payload: " + JSON.stringify(userData.payload))
-			// {"whoami": 123456, "email": "john.doe@example.com"} set via enroll()
-			//
-			// faceio.restartSession() let you authenticate another user again (without reloading the entire HTML page)
-			//
-            const storedUserId = window.flutterUserData?.userId;
-            const storedNric = window.flutterUserData?.nric;
+	async function authenticateUser() {
+        try {
+            const userData = window.flutterUserData || {};
+            const authResult = await faceio.authenticate({ locale: "auto" });
 
-            // Check if payload matches stored data
-            if (userData.payload.userId === storedUserId && userData.payload.nric === storedNric) {
-            window.flutter_inappwebview.callHandler('sendFacialId', userData.facialId);
-            window.flutter_inappwebview.callHandler('processComplete', 'Authentication successful');
-            } else {
-            alert("Authentication data does not match the logged in user! Please try again.");
-            window.flutter_inappwebview.callHandler('processComplete', 'Authentication failed: user mismatch');
-            faceio.restartSession();
+            const payload = {
+                userId: authResult.payload.userId || null,
+                nric: authResult.payload.nric || null
+            };
+
+            if (window.flutter_inappwebview) {
+                window.flutter_inappwebview.callHandler("processComplete", {
+                    success: true,
+                    payload: payload
+                });
             }
-			// handle authentication failure. Visit:
-			// https://faceio.net/integration-guide#error-codes
-			// for the list of all possible error codes
-			handleError(errCode);
-			window.flutter_inappwebview.callHandler('processComplete', 'Authentication failed');
-			// If you want to restart the session again without refreshing the current TAB. Just call:
-			faceio.restartSession();
-			// restartSession() let you authenticate the same user again (in case of failure) 
-			// without refreshing the entire page.
-			// restartSession() is available starting from the PRO plan and up, so think of upgrading your app
-			// for user usability.
-		});
-	}
+        } catch (err) {
+            console.error("Authentication failed:", err);
+            handleError(err.code); // use err.code from FaceIO
+            if (window.flutter_inappwebview) {
+                window.flutter_inappwebview.callHandler("processComplete", {
+                    success: false,
+                    payload: {}
+                });
+            }
+            faceio.restartSession();
+        }
+    }
 	function handleError(errCode) {
 		// Log all possible error codes during user interaction..
 		// Refer to: https://faceio.net/integration-guide#error-codes
