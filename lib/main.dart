@@ -176,6 +176,15 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
                   await controller.evaluateJavascript(source: "authenticateUser();");
                 }
               },
+              onPermissionRequest: (controller, request) async {
+                return PermissionResponse(
+                  resources: request.resources,
+                  action: PermissionResponseAction.GRANT,
+                );
+              },
+              onConsoleMessage: (controller, consoleMessage) {
+                print("JS Console: ${consoleMessage.message}");
+              },
             ),
           ),
           Padding(
