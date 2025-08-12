@@ -58,12 +58,14 @@ class _HomePageState extends State<HomePage> {
   }
   // delete facialId
   Future<void> deleteFacialId(String fid, String key) async {
+    print("Delete button clicked, fid: $fid, key: $key");  // Debug print
     final String url =
         "https://api.faceio.net/deletefacialid?fid=$fid&key=$key";
  
     try {
       final response = await http.get(Uri.parse(url));
- 
+      print("Response status: ${response.statusCode}");  // Debug print
+      print("Response body: ${response.body}");          // Debug print
       if (response.statusCode == 200) {
         print("Facial ID deleted successfully: ${response.body}");
       } else {
@@ -81,20 +83,37 @@ class _HomePageState extends State<HomePage> {
           SnackBar(content: Text('Camera permission is required')));
       return;
     }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => FaceIOWebViewPage(
-          isEnroll: isEnroll,
-          userId: staticUserId,
-          nric: staticNric,
-        ),
+    final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => FaceIOWebViewPage(
+        isEnroll: isEnroll,
+        userId: staticUserId,
+        nric: staticNric,
       ),
-    ).then((_) {
-      // Reload facialId after returning
-      _loadFacialId();
-    });
+    ),
+  );
+
+  _loadFacialId();
+
+  if (result != null && result is String) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result)),
+    );
+  }
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (_) => FaceIOWebViewPage(
+    //       isEnroll: isEnroll,
+    //       userId: staticUserId,
+    //       nric: staticNric,
+    //     ),
+    //   ),
+    // ).then((_) {
+    //   // Reload facialId after returning
+    //   _loadFacialId();
+    // });
   }
 
   @override
@@ -124,7 +143,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () {
                   deleteFacialId(_facialId!, faceioApiKey);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
                 child: Text('Delete Facial ID'),
               ),
           ],
@@ -189,7 +208,18 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
                       _status = "Success! Facial ID: $facialId";
                     });
                     Future.delayed(Duration(seconds: 2), () {
-                      Navigator.pop(context);
+                      if (mounted) Navigator.pop(context, _status);
+                    });
+                  },
+                );
+                _webViewController.addJavaScriptHandler(
+                  handlerName: 'processComplete',
+                  callback: (args) {
+                    String message =
+                        args.isNotEmpty ? args[0].toString() : 'Process completed';
+                    setState(() => _status = message);
+                    Future.delayed(const Duration(seconds: 2), () {
+                      if (mounted) Navigator.pop(context);
                     });
                   },
                 );
