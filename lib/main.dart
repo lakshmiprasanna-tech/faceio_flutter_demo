@@ -169,13 +169,14 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
                 """;
                 await controller.evaluateJavascript(source: jsInject);
 
-                // Call the appropriate FaceIO function
+                //Call the appropriate FaceIO function
                 if (widget.isEnroll) {
                   await controller.evaluateJavascript(source: "enrollNewUser();");
                 } else {
                   await controller.evaluateJavascript(source: "authenticateUser();");
                 }
               },
+              //camera permission for webview page
               onPermissionRequest: (controller, request) async {
                 return PermissionResponse(
                   resources: request.resources,
@@ -187,11 +188,7 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
               },
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(12),
-            child: Text(_status),
-          )
-        ],
+        ],   
       ),
     );
   }
