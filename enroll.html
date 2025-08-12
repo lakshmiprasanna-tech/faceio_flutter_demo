@@ -17,7 +17,7 @@
 		// Start the facial enrollment process
 		faceio.enroll({
 			"locale": "auto", // Default user locale
-			"userConsent": false, // Set to true if you have already collected user consent
+			// "userConsent": false, // Set to true if you have already collected user consent
 			"payload": {
 				/* The payload we want to associate with this particular user
 				* which is forwarded back to us on each of his future authentication...
@@ -27,11 +27,8 @@
 			}
 		}).then(userInfo => {
 			// User Successfully Enrolled!
-			alert(
-			`User Successfully Enrolled! Details:
-			Unique Facial ID: ${userInfo.facialId}`
-			);
             window.flutter_inappwebview.callHandler('sendFacialId', userInfo.facialId);
+            window.flutter_inappwebview.callHandler('processComplete', 'Enrollment successful');
 			console.log(userInfo);
 			// handle success, save the facial ID, redirect to dashboard...
 			//
@@ -41,7 +38,7 @@
 			// https://faceio.net/integration-guide#error-codes
 			// for the list of all possible error codes
 			handleError(errCode);
-			
+			window.flutter_inappwebview.callHandler('processComplete', errorCode);
 			// If you want to restart the session again without refreshing the current TAB. Just call:
 			faceio.restartSession();
 			// restartSession() let you enroll the same or another user again (in case of failure) without refreshing the entire page.

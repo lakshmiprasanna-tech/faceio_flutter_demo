@@ -26,7 +26,7 @@
 			// for each of his successful future authentication. FACEIO recommend
 			// that your rely on this ID if you plan to uniquely identify
 			// all enrolled users on your backend for example.
-			console.log("Linked facial Id: " + userData.facialId)
+			
 			// Grab the arbitrary data you have already linked (if any) to this particular user
 			// during his enrollment via the payload parameter the enroll() method takes.
 			//console.log("Associated Payload: " + JSON.stringify(userData.payload))
@@ -34,12 +34,23 @@
 			//
 			// faceio.restartSession() let you authenticate another user again (without reloading the entire HTML page)
 			//
-		}).catch(errCode => {
+            const storedUserId = window.flutterUserData?.userId;
+            const storedNric = window.flutterUserData?.nric;
+
+            // Check if payload matches stored data
+            if (userData.payload.userId === storedUserId && userData.payload.nric === storedNric) {
+            window.flutter_inappwebview.callHandler('sendFacialId', userData.facialId);
+            window.flutter_inappwebview.callHandler('processComplete', 'Authentication successful');
+            } else {
+            alert("Authentication data does not match the logged in user! Please try again.");
+            window.flutter_inappwebview.callHandler('processComplete', 'Authentication failed: user mismatch');
+            faceio.restartSession();
+            }
 			// handle authentication failure. Visit:
 			// https://faceio.net/integration-guide#error-codes
 			// for the list of all possible error codes
 			handleError(errCode);
-			
+			window.flutter_inappwebview.callHandler('processComplete', 'Authentication failed');
 			// If you want to restart the session again without refreshing the current TAB. Just call:
 			faceio.restartSession();
 			// restartSession() let you authenticate the same user again (in case of failure) 
