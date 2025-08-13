@@ -196,6 +196,7 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Enrollment failed: ${result['error']}")),
                 );
+                Navigator.pop(context, result['error']);
               }
             },
           );
