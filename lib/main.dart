@@ -126,7 +126,7 @@ class _HomePageState extends State<HomePage> {
               onPressed: _facialId == null
                   ? null
                   : () => deleteFacialId(_facialId!, faceioApiKey),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
               child: Text('Delete Facial ID'),
             ),
           ],
