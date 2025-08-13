@@ -3,6 +3,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'dart:developer';
 
 void main() {
   runApp(FaceIODemoApp());
@@ -175,11 +176,17 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
           // Enrollment handler
           _webViewController.addJavaScriptHandler(
             handlerName: 'sendFacialId',
-            callback: (args) {
+            callback: (args) async {
               final result = args.first;
               if (result['success'] == true) {
-                log("Enrollment Success: Facial ID = ${result['facialId']}");
-                log("Payload: ${result['payload']}");
+                 final payload = result['payload'];
+                 final userId = payload['userId'] ?? '';
+                 final nric = payload['nric'] ?? '';
+                 final facialId = payload['facialId'] ?? '';
+                log("Enrollment Success. Payload: ${result['payload']}");
+
+                // Save user data
+                await _saveUserData(userId, nric, facialId);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Enrollment successful")),
                 );
@@ -243,7 +250,7 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
           );
         },
         onConsoleMessage: (controller, consoleMessage) {
-          print("JS Console: ${consoleMessage.message}");
+          log("JS Console: ${consoleMessage.message}");
         },
       ),
     );
