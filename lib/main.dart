@@ -27,8 +27,8 @@ class _HomePageState extends State<HomePage> {
   String? _facialId;
   String _status = 'Loading...';
 
-  final String staticUserId = "user123";
-  final String staticNric = "900101-01-1234";
+  final String staticUserId = "user789";
+  final String staticNric = "500000-01-1234";
   final String faceioApiKey = "37b1ae3e2f64b229614e4ab2797416ba";
 
   @override
@@ -172,13 +172,24 @@ class _FaceIOWebViewPageState extends State<FaceIOWebViewPage> {
         onWebViewCreated: (controller) {
           _webViewController = controller;
 
-          // Enrollment success handler
+          // Enrollment handler
           _webViewController.addJavaScriptHandler(
             handlerName: 'sendFacialId',
-            callback: (args) async {
-              String facialId = args.isNotEmpty ? args[0] : '';
-              await _saveUserData(widget.userId, widget.nric, facialId);
-              Navigator.pop(context, "Enrollment successful!");
+            callback: (args) {
+              final result = args.first;
+              if (result['success'] == true) {
+                log("Enrollment Success: Facial ID = ${result['facialId']}");
+                log("Payload: ${result['payload']}");
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Enrollment successful")),
+                );
+                Navigator.pop(context, result['facialId']);
+              } else {
+                log("Enrollment Failed: ${result['error']}");
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Enrollment failed: ${result['error']}")),
+                );
+              }
             },
           );
 

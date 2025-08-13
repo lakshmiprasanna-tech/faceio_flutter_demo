@@ -26,7 +26,7 @@
             });
 
             // Notify Flutter of success
-            window.flutter_inappwebview.callHandler("processComplete", {
+            window.flutter_inappwebview.callHandler("sendFacialId", {
                 success: true,
                 payload: {
                     userId: userData.userId,
@@ -39,9 +39,9 @@
             handleError(errCode);
 
             // Notify Flutter of failure
-            window.flutter_inappwebview.callHandler("processComplete", {
+            window.flutter_inappwebview.callHandler("sendFacialId", {
                 success: false,
-                payload: {}
+                payload: { error: errCode}
             });
 
             faceio.restartSession();
